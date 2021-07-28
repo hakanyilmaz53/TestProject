@@ -1,0 +1,31 @@
+USE [Test]
+GO
+/****** Object:  StoredProcedure [dbo].[ProcedureTest]    Script Date: 28.07.2021 20:02:44 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROC [dbo].[ProcedureTest]
+@MalKodu varchar(50),
+@BaslangicTarihi int,
+@BitisTarihi int
+AS
+
+BEGIN
+	declare @stok int;
+	set @stok=0;
+       select 
+		ROW_NUMBER() OVER (ORDER BY STI.Tarih) as SiraNo,
+		case when STI.IslemTur=0 then 'GİRİŞ' else 'ÇIKIŞ' end as IslemTur,
+		STI.EvrakNo,
+		convert(varchar(15),cast(STI.Tarih - 2 as datetime),104) as Tarih,
+		case when STI.IslemTur=0 then STI.Miktar else 0 end as GirisMiktar,
+		case when STI.IslemTur=1 then STI.Miktar else 0 end as CikisMiktar,
+		0 as StokMiktar
+
+	   from STI
+	   inner join STK on STK.MalKodu=STI.MalKodu
+	   where STI.Tarih>=@BaslangicTarihi and STI.Tarih<=@BitisTarihi and (STI.MalKodu like ('%'+@MalKodu+'%') or STK.MalAdi like ('%'+@MalKodu+'%'))  
+	   ;
+	   
+END
